@@ -58,6 +58,11 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
         return 'synchronize libraries data with remote mds storage';
     }
 
+    /**
+     *
+     * @returns {*|string}
+     * @private
+     */
     _getLibrariesCachePath() {
         return path.join(this.getBaseConfig().getCacheFolder(), (this.getTaskConfig()['baseUrl'] || '/libs'));
     }
@@ -78,7 +83,7 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
     _getRegistryFromCache() {
         return new Promise(resolve => {
             fsExtra.readJSON(this._getMDSRegistryFilePath(), (error, content) => {
-                return resolve(error ? {} : content);
+                return resolve((error || !content) ? {} : content);
             });
         });
     }
@@ -98,7 +103,7 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
         });
     }
 
-    _createComparationMap(registry) {
+    _createComparatorMap(registry) {
         return Object.keys(registry).reduce((prev, lib) => {
             var versions = registry[lib].versions;
             if (versions) {
@@ -111,8 +116,8 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
     }
 
     _compareRegistryFiles(model, local, remote) {
-        var localCM = this._createComparationMap(local),
-            remoteCM = this._createComparationMap(remote),
+        var localCM = this._createComparatorMap(local),
+            remoteCM = this._createComparatorMap(remote),
             added = [],
             modified = [],
             removed = [],
@@ -121,7 +126,7 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
                     item = { lib: k[0], version: k[1] };
 
                 this.logger.debug(`${type} lib: => ${item.lib} version: => ${item.version}`);
-                model.getChanges()['add' + type](item);
+                model.getChanges().pages['add' + type](item);
                 collection.push(item);
             };
 
