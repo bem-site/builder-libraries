@@ -1,3 +1,9 @@
+/**
+ * Module for sync libraries MDS libraries data with local system
+ * @module src/tasks/libraries-sync-mds.es6
+ * @author Kuznetsov Andrey
+ */
+
 import fs from 'fs';
 import path from 'path';
 import _ from 'lodash';
@@ -6,6 +12,11 @@ import fsExtra from 'fs-extra';
 import MDS from 'mds-wrapper';
 import vow from 'vow';
 
+/**
+ * @exports
+ * @class LibrariesSyncMDS
+ * @classdesc Sync libraries MDS libraries data with local system
+ */
 export default class LibrariesSyncMDS extends builderCore.tasks.Base {
 
     constructor(baseConfig, taskConfig) {
@@ -51,12 +62,18 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
         this.api = new MDS(mdsConfig);
     }
 
+    /**
+     * Returns module instance for log purposes
+     * @static
+     * @returns {Module}
+     */
     static getLoggerName () {
         return module;
     }
 
     /**
      * Return task human readable description
+     * @static
      * @returns {String} path
      */
     static getName () {
@@ -284,6 +301,7 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
 
     /**
      * Performs task
+     * @public
      * @returns {Promise}
      */
     run(model) {
