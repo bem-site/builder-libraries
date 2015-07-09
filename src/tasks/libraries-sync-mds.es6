@@ -119,9 +119,9 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
         // по url: http://{mds host}:{mds port}/get-{mds namespace}/root
         return new Promise((resolve) => {
             this.api.read(REGISTRY_MDS_KEY, (error, content) => {
-                if(error) {
+                if(error || !content) {
                     this.logger
-                        .error(error.message)
+                        .error(error ? error.message : 'Registry was not found or empty')
                         .warn('Can not load registry file from MDS storage. ' +
                         'Please verify your mds settings. Registry will be assumed as empty');
                     return resolve({});
@@ -181,14 +181,14 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
         // происходит итерация по ключам Map построенного для реестра загруженного с MDS хоста
         // если локальный Map не содержит сочетания {lib}||{version}, то версия {version} библиотеки
         // {lib} считается добавленной (новой)
-        for (let key of remoteCM.keys()) {
+        [...remoteCM.keys()].forEach(key => {
             !localCM.has(key) && processItem(key, added, 'Added');
-        }
+        });
 
         // если ключи {lib}||{version} присутствуют в обоих Map объектах, то сравниваются значения
         // для этих ключей. Если sha-суммы или даты сборки не совпадают, то версия {version} библиотеки
         // {lib} считается модифицированной (измененной)
-        for (let key of remoteCM.keys()) {
+        [...remoteCM.keys()].forEach(key => {
             if (localCM.has(key)) {
                 let vLocal = localCM.get(key),
                     vRemote = remoteCM.get(key);
@@ -196,14 +196,14 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
                     processItem(key, modified, 'Modified');
                 }
             }
-        }
+        });
 
         // происходит итерация по ключам Map построенного для реестра загруженного с локальной файловой системы
         // если Map загруженный с MDS не содержит сочетания {lib}||{version}, то версия {version} библиотеки
         // {lib} считается удаленной
-        for (let key of localCM.keys()) {
+        [...localCM.keys()].forEach(key => {
             !remoteCM.has(key) && processItem(key, removed, 'Removed');
-        }
+        });
 
         return { added: added, modified: modified, removed: removed };
     }

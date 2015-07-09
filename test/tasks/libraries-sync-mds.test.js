@@ -148,9 +148,9 @@ describe('LibrariesSynMDS', function () {
                 setTimeout(done, 300);
             });
 
-            it('should return rejected promise if registry was not loaded from MDS', function () {
-                return task._getRegistryFromMDS().catch(function (error) {
-                   error.message.should.equal('Bla');
+            it('should return empty object if registry was not loaded from MDS', function () {
+                return task._getRegistryFromMDS().then(function (result) {
+                    should.deepEqual(result, {});
                 });
             });
 
@@ -574,9 +574,14 @@ describe('LibrariesSynMDS', function () {
                         return task.run(model);
                     })
                     .then(function (model) {
-                        return true;
+                        var changes = model.getChanges().pages;
+                        changes.added.should.have.length(15);
+                        changes.modified.should.have.length(0);
+                        changes.removed.should.have.length(0);
                     });
             });
+
+            // TODO add more tests for run method for different cases
 
             after(function (done) {
                 emulator.stop();
