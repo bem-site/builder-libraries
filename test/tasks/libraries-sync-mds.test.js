@@ -1,7 +1,10 @@
-var path = require('path'),
+var fs = require('fs'),
+    path = require('path'),
+    vow = require('vow'),
     should = require('should'),
     MDS = require('mds-wrapper'),
     fsExtra = require('fs-extra'),
+    emulator = require('mds-wrapper/mds-emulator.js'),
     Config = require('bs-builder-core/lib/config'),
     Model = require('bs-builder-core/lib/model/model'),
     LibrariesSynMDS = require('../../lib/tasks/libraries-sync-mds');
@@ -58,17 +61,29 @@ describe('LibrariesSynMDS', function () {
     });
 
     describe('instance methods', function () {
-        var config, task;
+        var config, task, testAPI;
 
         beforeEach(function () {
             config = new Config('debug');
             task = new LibrariesSynMDS(config, {
                 mds: {
+                    debug: false,
                     namespace: 'mysite',
-                    host: 'storage.mds.net',
-                    port: 80
+                    host: '127.0.0.1',
+                    port: 3000
                 },
                 baseUrl: '/libraries'
+            }),
+            testAPI = new MDS({
+                namespace: 'mysite',
+                get: {
+                    host: '127.0.0.1',
+                    port: 3000
+                },
+                post: {
+                    host: '127.0.0.1',
+                    port: 3001
+                }
             });
 
             fsExtra.mkdirsSync(task.getBaseConfig().getCacheFolder());
@@ -124,6 +139,35 @@ describe('LibrariesSynMDS', function () {
                 return task._getRegistryFromCache().then(function (result) {
                     should.deepEqual(result, {});
                 });
+            });
+        });
+
+        describe('_getRegistryFromMDS', function () {
+            before(function (done) {
+                emulator.start(3000, 3001);
+                setTimeout(done, 300);
+            });
+
+            it('should return rejected promise if registry was not loaded from MDS', function () {
+                return task._getRegistryFromMDS().catch(function (error) {
+                   error.message.should.equal('Bla');
+                });
+            });
+
+            it('should return registry file from mds', function () {
+                var registryFilePath = path.join(process.cwd(), './test/fixtures/registry.json'),
+                    registry = fsExtra.readJSONSync(registryFilePath);
+
+                return testAPI.writeP('root', JSON.stringify(registry)).then(function () {
+                    return task._getRegistryFromMDS().then(function (result) {
+                        should.deepEqual(result, registry);
+                    });
+                })
+            });
+
+            after(function (done) {
+                emulator.stop();
+                setTimeout(done, 300);
             });
         });
 
@@ -451,6 +495,92 @@ describe('LibrariesSynMDS', function () {
                 should.deepEqual(model.getChanges().pages.removed, [
                     { lib: 'bem-core', version: 'v2' }
                 ]);
+            });
+        });
+
+        describe('_saveLibraryVersionFile', function () {
+            before(function (done) {
+                emulator.start(3000, 3001);
+                setTimeout(done, 300);
+            });
+
+            it('should rejected with error if library version data file does not exists in MDS', function () {
+                return task._saveLibraryVersionFile({ lib: 'bem-core', version: 'v2' })
+                    .catch(function (error) {
+                        error.message.should.equal('Bla');
+                    });
+            });
+
+            it('should successfully download library version file from MDS to filesystem', function () {
+                var testData = JSON.stringify({ lib: 'bem-core', version: 'v2' });
+                return testAPI.writeP('bem-core/v2/data.json', testData)
+                    .then(function () {
+                        return task._saveLibraryVersionFile({ lib: 'bem-core', version: 'v2' });
+                    })
+                    .then(function () {
+                        var result = fsExtra.readJSONSync(
+                            path.join(task._getLibVersionPath('bem-core', 'v2'), 'mds.data.json'));
+                        should.deepEqual(result, JSON.parse(testData));
+                    });
+            });
+
+            after(function (done) {
+                emulator.stop();
+                setTimeout(done, 300);
+            });
+        });
+
+        describe('_removeLibraryVersionFolder', function () {
+            before(function () {
+                var p = task._getLibVersionPath('bem-core', 'v2');
+                fsExtra.ensureDirSync(p);
+                fsExtra.outputFileSync(path.join(p, 'mds.data.json'), 'Foo Bar', 'utf-8');
+            });
+
+            it('should successfully remove library version folder in local cache', function () {
+                return task._removeLibraryVersionFolder({ lib: 'bem-core', version: 'v2' }).then(function () {
+                    fs.existsSync(task._getLibVersionPath('bem-core', 'v2')).should.equal(false);
+                });
+            });
+        });
+
+        describe('run', function () {
+            before(function (done) {
+                emulator.start(3000, 3001);
+                setTimeout(done, 300);
+            });
+
+            it('should successfully load all library versions on first launch', function () {
+                var registryFilePath = path.join(process.cwd(), './test/fixtures/registry.json'),
+                    registry = fsExtra.readJSONSync(registryFilePath),
+                    libVersions = [],
+                    promises;
+
+                Object.keys(registry).forEach(function (lib) {
+                    Object.keys(registry[lib ].versions).forEach(function (version) {
+                        libVersions.push({ lib: lib, version: version });
+                    });
+                });
+
+                promises = []
+                    .concat(testAPI.writeP('root', JSON.stringify(registry)))
+                    .concat(libVersions.map(function (item) {
+                        return testAPI.writeP(item.lib + '/' + item.version + '/data.json', JSON.stringify(item));
+                    }));
+
+                return vow.all(promises)
+                    .then(function () {
+                        var model = new Model();
+                        return task.run(model);
+                    })
+                    .then(function (model) {
+                        return true;
+                    });
+            });
+
+            after(function (done) {
+                emulator.stop();
+                setTimeout(done, 300);
             });
         });
     });
