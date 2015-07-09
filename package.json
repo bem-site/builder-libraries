@@ -44,6 +44,7 @@
     "jshint": "node_modules/.bin/jshint --extra-ext .es6 .",
     "jscs": "node_modules/.bin/jscs -c .jscs.js .",
     "codestyle": "npm run jshint && npm run jscs",
+    "jsdoc": "esdoc -c esdoc.json",
     "compile": "babel src --optional runtime --out-dir lib",
     "pretest": "npm run codestyle && npm run compile",
     "prepublish": "npm run compile",
