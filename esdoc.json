@@ -1,0 +1,7 @@
+{
+  "source": "./src",
+  "destination": "./jsdoc",
+  "access": ["public", "protected", "private"],
+  "index": "./README.md",
+  "package": "./package.json"
+}
