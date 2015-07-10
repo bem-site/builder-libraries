@@ -93,30 +93,10 @@ describe('LibrariesSynMDS', function () {
             fsExtra.removeSync(task.getBaseConfig().getCacheFolder());
         });
 
-        describe('_getLibrariesCachePath', function () {
-            it('should get valid libraries cache path with given "baseUrl"', function () {
-                task._getLibrariesCachePath()
-                    .should.equal(path.join(task.getBaseConfig().getCacheFolder(), 'libraries'));
-            });
-
-            it('should get valid libraries cache path with default "baseUrl"', function () {
-                task.getTaskConfig().baseUrl = undefined;
-                task._getLibrariesCachePath()
-                    .should.equal(path.join(task.getBaseConfig().getCacheFolder(), 'libs'));
-            });
-        });
-
         describe('_getMDSRegistryFilePath', function () {
             it('should return valid path to MDS registry file in cache', function () {
                 task._getMDSRegistryFilePath()
                     .should.equal(path.join(task.getBaseConfig().getCacheFolder(), 'libraries/registry.json'));
-            });
-        });
-
-        describe('_getLibVersionPath', function () {
-            it('should return valid library version path in cache', function () {
-                task._getLibVersionPath('bem-core', 'v1.0.0')
-                    .should.equal(path.join(task.getBaseConfig().getCacheFolder(), 'libraries/bem-core/v1.0.0'));
             });
         });
 
@@ -519,7 +499,7 @@ describe('LibrariesSynMDS', function () {
                     })
                     .then(function () {
                         var result = fsExtra.readJSONSync(
-                            path.join(task._getLibVersionPath('bem-core', 'v2'), 'mds.data.json'));
+                            path.join(task.getLibVersionPath('bem-core', 'v2'), 'mds.data.json'));
                         should.deepEqual(result, JSON.parse(testData));
                     });
             });
@@ -532,14 +512,14 @@ describe('LibrariesSynMDS', function () {
 
         describe('_removeLibraryVersionFolder', function () {
             before(function () {
-                var p = task._getLibVersionPath('bem-core', 'v2');
+                var p = task.getLibVersionPath('bem-core', 'v2');
                 fsExtra.ensureDirSync(p);
                 fsExtra.outputFileSync(path.join(p, 'mds.data.json'), 'Foo Bar', 'utf-8');
             });
 
             it('should successfully remove library version folder in local cache', function () {
                 return task._removeLibraryVersionFolder({ lib: 'bem-core', version: 'v2' }).then(function () {
-                    fs.existsSync(task._getLibVersionPath('bem-core', 'v2')).should.equal(false);
+                    fs.existsSync(task.getLibVersionPath('bem-core', 'v2')).should.equal(false);
                 });
             });
         });

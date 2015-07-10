@@ -7,17 +7,17 @@
 import fs from 'fs';
 import path from 'path';
 import _ from 'lodash';
-import builderCore from 'bs-builder-core';
 import fsExtra from 'fs-extra';
 import MDS from 'mds-wrapper';
 import vow from 'vow';
+import LibrariesBase from './libraries-base';
 
 /**
  * @exports
  * @class LibrariesSyncMDS
  * @classdesc Sync libraries MDS libraries data with local system
  */
-export default class LibrariesSyncMDS extends builderCore.tasks.Base {
+export default class LibrariesSyncMDS extends LibrariesBase {
 
     constructor(baseConfig, taskConfig) {
         super(baseConfig, taskConfig);
@@ -80,14 +80,6 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
         return 'synchronize libraries data with remote mds storage';
     }
 
-    /**
-     * Returns libraries cache path
-     * @returns {String} path
-     * @private
-     */
-    _getLibrariesCachePath() {
-        return path.join(this.getBaseConfig().getCacheFolder(), (this.getTaskConfig()['baseUrl'] || '/libs'));
-    }
 
     /**
      * Returns path to cached "registry.json" file on local filesystem
@@ -95,18 +87,7 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
      * @private
      */
     _getMDSRegistryFilePath() {
-        return path.join(this._getLibrariesCachePath(), 'registry.json');
-    }
-
-    /**
-     * Returns path for saving library version data file from mds storage into cache folder
-     * @param {String} lib - name of library
-     * @param {String} version - name of library version
-     * @returns {String} path
-     * @private
-     */
-    _getLibVersionPath(lib, version) {
-        return path.join(this._getLibrariesCachePath(), lib, version);
+        return path.join(this.getLibrariesCachePath(), 'registry.json');
     }
 
     /**
@@ -250,10 +231,11 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
         // сохраняется на файловую систему по пути:
         // {директория кеша}/{baseUrl|libs}/{lib}/{version}/mds.data.json
         return new Promise((resolve, reject) => {
-            fsExtra.ensureDir(this._getLibVersionPath(lib, version), () => {
+            fsExtra.ensureDir(this.getLibVersionPath(lib, version), () => {
                 this.api.read(`${lib}/${version}/data.json`, (error, content) => {
                     if (!error) {
-                        fs.writeFile(path.join(this._getLibVersionPath(lib, version), 'mds.data.json'),
+                        fs.writeFile(
+                            path.join(this.getLibVersionPath(lib, version), LibrariesBase.getLibVersionDataFilename()),
                             content, {encoding: 'utf-8'}, (error) => {
                                 if(!error) {
                                     resolve(item);
@@ -286,7 +268,7 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
         this.logger.debug(`Remove "data.json" file for library: ${lib} and version: ${version}`);
 
         return new Promise((resolve, reject) => {
-            fsExtra.remove(this._getLibVersionPath(lib, version), (error) => {
+            fsExtra.remove(this.getLibVersionPath(lib, version), (error) => {
                 if(!error) {
                     return resolve(item);
                 }
@@ -307,7 +289,7 @@ export default class LibrariesSyncMDS extends builderCore.tasks.Base {
     run(model) {
         this.beforeRun();
 
-        fsExtra.ensureDirSync(this._getLibrariesCachePath());
+        fsExtra.ensureDirSync(this.getLibrariesCachePath());
 
         return vow
             .all([
