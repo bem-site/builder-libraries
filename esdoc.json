@@ -3,5 +3,9 @@
   "destination": "./jsdoc",
   "access": ["public", "protected", "private"],
   "index": "./README.md",
-  "package": "./package.json"
+  "package": "./package.json",
+  "test": {
+    "type": "mocha",
+    "source": "./test/tasks"
+  }
 }
