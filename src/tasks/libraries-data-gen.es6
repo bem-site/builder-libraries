@@ -4,8 +4,7 @@
  * @author Kuznetsov Andrey
  */
 
-// import os from 'os';
-// import path from 'path';
+import os from 'os';
 import workerFarm from 'worker-farm';
 import LibrariesBase from './libraries-base';
 
@@ -69,24 +68,29 @@ export default class LibrariesSyncMDS extends LibrariesBase {
      */
     run (model) {
         this.beforeRun();
-        model;
-        /*
-        var numberOfCpus = os.cpus().length,
-            libraryVersionsForGeneration = []
+
+        var numberOfProcesses = os.cpus().length,
+            processesQueues = this._spreadByProcesses([]
                 .concat(this._findLibraryChanges(model, 'added'))
-                .concat(this._findLibraryChanges(model, 'modified')),
+                .concat(this._findLibraryChanges(model, 'modified')), numberOfProcesses),
             count = 0;
 
         return new Promise(resolve => {
-            for(let i = 0; i < reloadPerProcess.length; i++) {
-                workers('#' + i + ' FOO', function (err, outp) {
-                    console.log(outp);
-                    if (++count == reloadPerProcess.length)
-                        workerFarm.end(workers);
-                    resolve(model);
-                })
+            for(let i = 0; i < numberOfProcesses; i++) {
+                this.workers({
+                    baseUrl: this.getTaskConfig().baseUrl,
+                    basePath: this.getLibrariesCachePath(),
+                    data: processesQueues[i],
+                    languages: this.getBaseConfig().getLanguages()
+                }, (err, output) => {
+                    err;
+                    output;
+                    if (++count === numberOfProcesses) {
+                        workerFarm.end(this.workers);
+                        resolve(model);
+                    }
+                });
             }
         });
-        */
     }
 }

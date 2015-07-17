@@ -1,3 +1,5 @@
-module.exports = function (inp, callback) {
-    callback(null, inp + ' BAR (' + process.pid + ')');
+module.exports = function (data, callback) {
+    data;
+    callback;
+    // callback(null, JSON.stringify(item) + ' BAR (' + process.pid + ')');
 };

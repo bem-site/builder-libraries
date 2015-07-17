@@ -6,7 +6,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import _ from 'lodash';
 import fsExtra from 'fs-extra';
 import MDS from 'mds-wrapper';
 import vow from 'vow';
@@ -224,7 +223,7 @@ export default class LibrariesSyncMDS extends LibrariesBase {
                     `for library: ${lib} and version: ${version}`);
             };
 
-        this.logger.debug(`Download "data.json" file for library: ${lib} and version: ${version}`);
+        this.logger.debug(`Load file for library: ${lib} and version: ${version}`);
 
         // загружается файл с MDS хранилища по url:
         // http://{mds host}:{mds port}/{get-namespace}/{lib}/{version}/data.json
@@ -291,41 +290,58 @@ export default class LibrariesSyncMDS extends LibrariesBase {
 
         fsExtra.ensureDirSync(this.getLibrariesCachePath());
 
+        var _remote;
+
         return vow
             .all([
                 this._getRegistryFromCache(), // загружаем реестр с локальной файловой системы
                 this._getRegistryFromMDS() // загружаем реестр с удаленного MDS хоста
             ])
             .spread((local, remote) => {
+                _remote = remote;
                 return this._compareRegistryFiles(model, local, remote); // сравниваем реестры, находим дифф
             })
             .then((diff) => {
                 // формируем списки на удаление директорий версий библиотек
                 // и на скачивание обновленных data.json файлов версий библиотек с MDS хранилища
                 return vow.all([
-                    [].concat(diff.added).concat(diff.modified),
-                    [].concat(diff.removed).concat(diff.modified)
+                    vow.resolve([].concat(diff.added).concat(diff.modified)),
+                    vow.resolve([].concat(diff.removed).concat(diff.modified))
                 ]);
             })
             .spread((downloadQueue, removeQueue) => {
                 // удаляем папки измененных и удаленных версий библиотек с локальной файловой системы
                 return vow
-                    .all(removeQueue.map(this._removeLibraryVersionFolder))
+                    .all(removeQueue.map(this._removeLibraryVersionFolder.bind(this)))
                     .then(() => {
                         return downloadQueue;
                     });
             })
+            /*
             .then((downloadQueue) => {
                 // порциями по 10 штук загружаем обновленные data.json файлы
                 // и складываем их на файловую систему
-                var portions = _.chunk(downloadQueue, 10);
+                var portions = _.chunk(downloadQueue, 5);
                 return portions.reduce((prev, portion) => {
-                    prev.then(() => {
-                        return vow.all(portion.map(this._saveLibraryVersionFile));
+                    return prev.then(() => {
+                        return vow.all(portion.map(this._saveLibraryVersionFile.bind(this)));
                     });
-                    return prev;
                 }, vow.resolve());
             })
+            .then(() => {
+                return new Promise((resolve) => {
+                    fsExtra.writeJSON(this._getMDSRegistryFilePath(), _remote, (error) => {
+                        if (error) {
+                            this.logger
+                                .error('Error occur on saving MDS registry file')
+                                .error(`Error: ${error.message}`);
+                        }
+                        this.logger.debug('MDS Registry file has been successfully replaced');
+                        resolve();
+                    });
+                });
+            })
+            */
             .then(() => {
                 // выводим сообщение об успешном завершении задачи
                 this.logger.info(`Successfully finish task "${this.constructor.getName()}"`);

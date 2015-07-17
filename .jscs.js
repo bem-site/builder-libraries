@@ -5,7 +5,9 @@ module.exports = {
         '.*',
         'test',
         'lib',
-        'jsdoc'
+        'jsdoc',
+        'examples',
+        '*-compiled.js'
     ],
     requireSpaceAfterKeywords: ['if', 'else', 'for', 'while', 'do', 'switch', 'return', 'try', 'catch'],
     requireSpaceBeforeBlockStatements: true,
