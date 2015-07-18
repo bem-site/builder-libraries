@@ -10,7 +10,7 @@ import LibrariesBase from './libraries-base';
 
 /**
  * @exports
- * @class LibrariesSyncMDS
+ * @class LibrariesDataGen
  * @classdesc Sync libraries MDS libraries data with local system
  */
 export default class LibrariesSyncMDS extends LibrariesBase {
