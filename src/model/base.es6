@@ -20,7 +20,7 @@ export default class Base {
      * Sets value to given this._data object field.
      * If lang option was set, then value will be set to this._data[lang][field]
      * @param {String} field id
-     * @param {String|Number|Array} value
+     * @param {String|Number|Array|Boolean} value
      * @param {String} [lang] - language option
      * @returns {Base} - instance of class
      * @public
