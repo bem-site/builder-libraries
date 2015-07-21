@@ -1,16 +1,55 @@
 import path from 'path';
 import vow from 'vow';
 import Base from './base';
+import Document from './document';
 import Level from './level';
 
+/**
+ * @exports
+ * @class Version
+ * @desc version library model class
+ */
 export default class Version extends Base {
+    /**
+     * Version constructor
+     * @param {String} baseUrl - base libraries url
+     * @param {String} basePath - base path for libraries file inside cache folder
+     * @param {String} lib - name of library
+     * @param {String} version - name of library version
+     * @param {String[]} languages - array of languages
+     * @constructor
+     */
     constructor(baseUrl, basePath, lib, version, languages) {
         super();
+
+        /**
+         * Base url for all libraries pages
+         * @type {String}
+         */
         this.baseUrl = baseUrl;
+
+        /**
+         * Base path on cache folder for all libraries data files
+         * @type {String}
+         */
         this.basePath = basePath;
+
+        /**
+         * Array of languages
+         * @type {String[]}
+         */
         this.languages = languages;
 
+        /**
+         * Name of library
+         * @type {String}
+         */
         this.lib = lib;
+
+        /**
+         * Name of library version
+         * @type {string}
+         */
         this.version = version.replace(/\//g, '-');
     }
 
@@ -51,12 +90,39 @@ export default class Version extends Base {
         return vow.all(promises);
     }
 
-    _processDocuments() {
-        return [];
+    /**
+     * Processes all library version documents
+     * @param {Object} data - library version data object
+     * @returns {Promise}
+     * @private
+     */
+    _processDocuments(data) {
+        var documents = data['docs'],
+            promises = [];
+
+        if (!documents) {
+            return Promise.resolve(promises);
+        }
+
+        promises = Object.keys(documents)
+            .filter(item => {
+                return item !== 'readme';
+            })
+            .map(item => {
+                return (new Document(this, item)).processData(documents[item]);
+            });
+
+        return vow.all(promises);
     }
 
+    /**
+     * Processes all block levels
+     * @param {Object} data - library version data object
+     * @returns {Promise}
+     * @private
+     */
     _processLevels(data) {
-        var levels = data.levels;
+        var levels = data['levels'];
 
         if (!levels || !levels.length) {
             return Promise.resolve([]);
@@ -67,6 +133,12 @@ export default class Version extends Base {
         }));
     }
 
+    /**
+     * Saves json content into file in cache folder
+     * @param {Object} content data object
+     * @returns {Promise}
+     * @private
+     */
     _saveToCache(content) {
         return this.saveFile(path.join(this.basePath, this.lib, this.version, 'cache.json'), content, true);
     }

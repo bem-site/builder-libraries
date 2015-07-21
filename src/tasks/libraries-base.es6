@@ -32,7 +32,7 @@ export default class LibrariesBase extends builderCore.tasks.Base {
     }
 
     static getLibVersionDataFilename() {
-        return 'mds.data.json';
+        return 'storage.data.json';
     }
 
     /**

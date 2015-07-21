@@ -5,13 +5,13 @@ import Block from './block';
 /**
  * @exports
  * @class Level
- * @classdesc level library model class
+ * @desc level library model class
  */
 export default class Level extends Base {
     /**
      * Level constructor
      * @param {Object} version data object
-     * @param {Array}  version.languages - array of languages
+     * @param {String[]}  version.languages - array of languages
      * @param {String} version.baseUrl - base libraries url
      * @param {String} version.basePath - base path for libraries file inside cache folder
      * @param {String} version.lib - name of library
@@ -21,7 +21,17 @@ export default class Level extends Base {
      */
     constructor (version, level) {
         super();
+
+        /**
+         * Library version data object
+         * @type {{languages: String[], baseUrl: String, basePath: String, lib: String, version: String}}
+         */
         this.version = version;
+
+        /**
+         * Name of blocks level
+         * @type {String}
+         */
         this.level = level.replace('.docs', '').replace('.sets', '');
     }
 

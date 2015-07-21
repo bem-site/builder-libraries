@@ -9,6 +9,7 @@ import path from 'path';
 import fsExtra from 'fs-extra';
 import MDS from 'mds-wrapper';
 import vow from 'vow';
+import _ from 'lodash';
 import LibrariesBase from './libraries-base';
 
 /**
@@ -317,7 +318,6 @@ export default class LibrariesSyncMDS extends LibrariesBase {
                         return downloadQueue;
                     });
             })
-            /*
             .then((downloadQueue) => {
                 // порциями по 10 штук загружаем обновленные data.json файлы
                 // и складываем их на файловую систему
@@ -341,7 +341,6 @@ export default class LibrariesSyncMDS extends LibrariesBase {
                     });
                 });
             })
-            */
             .then(() => {
                 // выводим сообщение об успешном завершении задачи
                 this.logger.info(`Successfully finish task "${this.constructor.getName()}"`);

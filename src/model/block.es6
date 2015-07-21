@@ -5,7 +5,7 @@ import Base from './base';
 /**
  * @exports
  * @class Block
- * @classdesc block library model class
+ * @desc block library model class
  */
 export default class Block extends Base {
     /**
@@ -18,7 +18,17 @@ export default class Block extends Base {
      */
     constructor(level, block) {
         super();
+
+        /**
+         * Level data object
+         * @type {{version: Object, level: String}}
+         */
         this.level = level;
+
+        /**
+         * Name of block
+         * @type {String}
+         */
         this.block = block;
     }
 

@@ -6,6 +6,6 @@
   "package": "./package.json",
   "test": {
     "type": "mocha",
-    "source": "./test/tasks"
+    "source": "./test"
   }
 }

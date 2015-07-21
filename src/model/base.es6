@@ -5,14 +5,24 @@ import Logger from 'bem-site-logger';
 /**
  * @exports
  * @class Base
- * @classdesc base library model class
+ * @desc base library model class
  */
 export default class Base {
     /**
      * @constructor
      */
     constructor() {
+        /**
+         * Instance of logger
+         * @type {Logger}
+         */
         this.logger = Logger.createLogger(module);
+
+        /**
+         * Private data property for hold all key-value data pairs
+         * @type {{}}
+         * @private
+         */
         this._data = {};
     }
 

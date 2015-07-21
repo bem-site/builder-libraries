@@ -499,7 +499,7 @@ describe('LibrariesSynMDS', function () {
                     })
                     .then(function () {
                         var result = fsExtra.readJSONSync(
-                            path.join(task.getLibVersionPath('bem-core', 'v2'), 'mds.data.json'));
+                            path.join(task.getLibVersionPath('bem-core', 'v2'), 'storage.data.json'));
                         should.deepEqual(result, JSON.parse(testData));
                     });
             });
@@ -514,7 +514,7 @@ describe('LibrariesSynMDS', function () {
             before(function () {
                 var p = task.getLibVersionPath('bem-core', 'v2');
                 fsExtra.ensureDirSync(p);
-                fsExtra.outputFileSync(path.join(p, 'mds.data.json'), 'Foo Bar', 'utf-8');
+                fsExtra.outputFileSync(path.join(p, 'storage.data.json'), 'Foo Bar', 'utf-8');
             });
 
             it('should successfully remove library version folder in local cache', function () {

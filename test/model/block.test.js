@@ -68,7 +68,7 @@ describe('block', function () {
                 block = new Block(level, 'button');
             });
 
-            it('should set source and create data files', function () {
+            it('should set source and create data file', function () {
                 block._setSource({
                     data: { name: 'd-button' },
                     jsdoc: { name: 'js-button' }
@@ -105,7 +105,7 @@ describe('block', function () {
                 });
             });
 
-            it('should set source and create data files', function () {
+            it('should set source and create data files for block with missed jsdoc', function () {
                 block._setSource({
                     data: { name: 'd-button' }
                 }).then(function () {
